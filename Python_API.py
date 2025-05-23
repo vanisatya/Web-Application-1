@@ -1,4 +1,5 @@
-# main.py
+# Python_API.py
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
@@ -11,13 +12,13 @@ app = FastAPI()
 # Allow any frontend to call your API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with ["https://yourwebsite.com"] in production
+    allow_origins=["*"],  # Replace with your domain in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Track metrics file
+# Directory and file to log metrics
 log_folder = "logs"
 os.makedirs(log_folder, exist_ok=True)
 metrics_file = os.path.join(log_folder, "apm_metrics.log")
@@ -27,14 +28,14 @@ def log_metric(data):
     with open(metrics_file, "a") as file:
         file.write(json.dumps(data) + "\n")
 
-# Middleware to track all API requests
+# ➡️ Middleware: Track all HTTP requests
 @app.middleware("http")
 async def track_api_performance(request: Request, call_next):
     start_time = time.time()
     try:
         response = await call_next(request)
     except Exception as e:
-        # Log unhandled exceptions as errors
+        # Log unhandled exceptions
         error_metric = {
             "type": "exception",
             "error": str(e),
@@ -57,7 +58,12 @@ async def track_api_performance(request: Request, call_next):
     log_metric(metric)
     return response
 
-# ➡️ For Throughput: Custom event tracker
+# ➡️ Root endpoint (browser-friendly)
+@app.get("/")
+async def home():
+    return {"message": "Welcome to the APM Tracker API!"}
+
+# ➡️ Custom event tracker (for throughput)
 @app.post("/apm/track_event/")
 async def track_event(event: dict):
     event["type"] = "custom_event"
@@ -65,7 +71,7 @@ async def track_event(event: dict):
     log_metric(event)
     return {"status": "success", "message": "Event tracked"}
 
-# ➡️ For Availability monitoring
+# ➡️ Health check endpoint
 @app.get("/health")
 async def health_check():
     return {"status": "UP", "time": datetime.utcnow().isoformat()}
