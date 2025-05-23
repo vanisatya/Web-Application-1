@@ -60,10 +60,22 @@ async def track_api_performance(request: Request, call_next):
 # ➡️ Serve static files like CSS, JS, images
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# ➡️ Root endpoint: Serve portfolio homepage
+# ➡️ Routes for static HTML pages
 @app.get("/", response_class=HTMLResponse)
 async def serve_homepage():
     return FileResponse("static/index.html")
+
+@app.get("/generic.html", response_class=HTMLResponse)
+async def serve_certifications():
+    return FileResponse("static/generic.html")
+
+@app.get("/elements.html", response_class=HTMLResponse)
+async def serve_skills():
+    return FileResponse("static/elements.html")
+
+@app.get("/contact.html", response_class=HTMLResponse)
+async def serve_contact():
+    return FileResponse("static/contact.html")
 
 # ➡️ Custom event tracker (for throughput)
 @app.post("/apm/track_event/")
