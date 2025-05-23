@@ -1,7 +1,7 @@
-# Python_API.py
-
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from datetime import datetime
 import json
 import time
@@ -35,7 +35,6 @@ async def track_api_performance(request: Request, call_next):
     try:
         response = await call_next(request)
     except Exception as e:
-        # Log unhandled exceptions
         error_metric = {
             "type": "exception",
             "error": str(e),
@@ -58,10 +57,13 @@ async def track_api_performance(request: Request, call_next):
     log_metric(metric)
     return response
 
-# ➡️ Root endpoint (browser-friendly)
-@app.get("/")
-async def home():
-    return {"message": "Welcome to the APM Tracker API!"}
+# ➡️ Serve static files like CSS, JS, images
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# ➡️ Root endpoint: Serve portfolio homepage
+@app.get("/", response_class=HTMLResponse)
+async def serve_homepage():
+    return FileResponse("static/index.html")
 
 # ➡️ Custom event tracker (for throughput)
 @app.post("/apm/track_event/")
